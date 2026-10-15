@@ -172,69 +172,70 @@
   }
   addEventListener('popstate', onPopState);
 
-  /* ============================================================
-     PWA Install 
-     ============================================================ */
-  let deferredPrompt = null;
+ /* ============================================================
+   PWA Install — button always visible
+   ============================================================ */
+let deferredPrompt = null;
 
-  // Hide install button by default until browser confirms installability
+// Capture the native prompt when the browser offers it
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+// Hide the button once the app is actually installed
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
   if (installBtn) installBtn.style.display = 'none';
+  showToast('PRISM installed successfully');
+});
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (installBtn) installBtn.style.display = 'flex';
-  });
+// If already running as an installed app, hide the button
+if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+  if (installBtn) installBtn.style.display = 'none';
+}
 
-  window.addEventListener('appinstalled', () => {
-    deferredPrompt = null;
-    if (installBtn) installBtn.style.display = 'none';
-    showToast('PRISM installed successfully');
-  });
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /android/i.test(navigator.userAgent);
 
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isAndroid = /android/i.test(navigator.userAgent);
+function installInstructions() {
+  if (isIOS) return 'To install PRISM:<br><br>1. In <b>Safari</b>, tap the <b>Share</b> button.<br>2. Choose <b>"Add to Home Screen"</b>.<br>3. Tap <b>Add</b>.';
+  if (isAndroid) return 'To install PRISM:<br><br>1. Tap the browser menu <b>⋮</b><br>2. Choose <b>"Install app"</b> or <b>"Add to Home screen"</b>.<br>3. Confirm';
+  return 'To install PRISM:<br><br>1. Click the <b>Install</b> icon in the address bar, or<br>2. Open the browser menu <b>⋮</b> → <b>"Install PRISM"</b>.';
+}
 
-  function installInstructions() {
-    if (isIOS) return 'To install PRISM:<br><br>1. Tap the <b>Share</b> button in Safari.<br>2. Scroll down and tap <b>"Add to Home Screen"</b>.<br>3. Tap <b>Add</b>.';
-    if (isAndroid) return 'To install PRISM:<br><br>1. Tap browser menu <b>⋮</b><br>2. Choose <b>"Install app"</b><br>3. Confirm';
-    return 'To install PRISM:<br><br>1. Open browser menu <b>⋮</b><br>2. Choose <b>"Install PRISM"</b><br>3. Confirm';
-  }
+if (installBtn) {
+  installBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    closeAllMenus();
 
-  if (installBtn) {
-    installBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      closeAllMenus();
+    // Already installed → just tell the user
+    if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+      showToast(getUIText('toast_install_already'));
+      return;
+    }
 
-      if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
-        showToast(getUIText('toast_install_already'));
-        return;
-      }
-
-      // iOS doesn't support beforeinstallprompt
-      if (isIOS || !deferredPrompt) {
-        instText.innerHTML = installInstructions();
-        if (!installModal.classList.contains('on')) navPush('install');
-        installModal.classList.add('on');
-        return;
-      }
-
-      // Trigger native install prompt instantly
+    // Native prompt available → trigger it instantly
+    if (deferredPrompt) {
       deferredPrompt.prompt();
       const choiceResult = await deferredPrompt.userChoice;
       deferredPrompt = null;
+      showToast(choiceResult.outcome === 'accepted'
+        ? getUIText('toast_install_installing')
+        : getUIText('toast_install_dismissed'));
+      return;
+    }
 
-      if (choiceResult.outcome === 'accepted') {
-        showToast(getUIText('toast_install_installing'));
-      } else {
-        showToast(getUIText('toast_install_dismissed'));
-      }
-    });
-  }
+    // No native prompt → show manual instructions (iOS, Safari, etc.)
+    instText.innerHTML = installInstructions();
+    if (!installModal.classList.contains('on')) navPush('install');
+    installModal.classList.add('on');
+  });
+}
 
-  if (instClose) instClose.addEventListener('click', () => uiBack());
-  if (installModal) installModal.addEventListener('click', e => { if (e.target === installModal) uiBack(); });
-
+if (instClose) instClose.addEventListener('click', () => uiBack());
+if (installModal) installModal.addEventListener('click', e => { if (e.target === installModal) uiBack(); });
+   
   function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
     addEventListener('load', async () => {
