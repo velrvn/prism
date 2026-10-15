@@ -1,93 +1,40 @@
-# PRISM
+# PRISM — Passages Rendered In Simple Minimalism
 
-**PRISM** stands for **Passages Rendered In Simple Minimalism**.
-
-PRISM is an offline-first Bible reading Progressive Web App focused on clean typography, smooth navigation, and distraction-free scripture study. It allows users to download translations locally, read offline, compare versions, save verses, and share scripture cards.
-
-[https://velrvn.github.io/prism](https://velrvn.github.io/prism)
-
----
-
-## Overview
-
-PRISM is built as a lightweight, installable web app. It loads Bible data from an XML source, stores downloaded translations locally, and remembers the user's selected translation across sessions.
-
-The interface is intentionally minimal. The main view presents the books of the Bible as a navigable stack, while the reader view focuses on the text itself.
-
----
+An offline-first, multilingual Bible reader PWA.
 
 ## Features
+- 52 translations, downloaded on demand and stored locally (Cache Storage)
+- Full offline support after install (Service Worker + cached translations)
+- Remembers your selected translation across restarts
+- Favorites, saved scripture library with categories, verse comparison, verse sharing
 
-### Offline Reading
+## Run locally
+Serve the folder with any static server (Service Workers require `http(s)`, not `file://`):
 
-PRISM uses a Service Worker and Cache Storage to work offline after the app shell and selected translations have been downloaded.
+    npx serve .
+    # or
+    python3 -m http.server 8000
 
-Once a translation is downloaded, the user can open it instantly without an internet connection.
+## Deploy to GitHub Pages
+1. Create a repository and push this folder to the root of the `main` branch.
+2. Repo → **Settings → Pages → Source: Deploy from a branch → main / (root)** → Save.
+3. Wait ~1 minute; your app is live at `https://<user>.github.io/<repo>/`.
+4. HTTPS is automatic, so the PWA / Service Worker works out of the box.
 
-### Translation Downloads
+## Adding a translation
+1. Add an entry to `PRISM.VERSIONS` in `js/config.js`:
+   `{ id: 'MyBibleFile', label: 'My Language (VER)', lang: 'My Language' }`
+2. The XML file must exist at:
+   `https://raw.githubusercontent.com/Beblia/Holy-Bible-XML-Format/master/MyBibleFile.xml`
+3. Optionally add translated book names to `PRISM.BOOK_TITLES['My Language']` (66 entries).
 
-When the user selects a translation, PRISM downloads and stores it locally.
+## Storage model
+| What                  | Where                                   |
+|-----------------------|-----------------------------------------|
+| App shell (HTML/CSS/JS)| Service Worker precache                 |
+| Translation data      | Cache Storage (`prism-bible-data-v1`)   |
+| Selected translation  | localStorage (`PRISM_prefs_v1`)         |
+| Favorites / saved     | localStorage                            |
 
-This makes future switching instant and allows the app to function offline.
-
-### Persistent Translation Selection
-
-The selected translation is saved locally.
-
-If the user closes the app, refreshes the page, or reopens it later, PRISM restores the previously selected translation.
-
-### Multilingual Support
-
-PRISM supports multiple Bible translations and languages.
-
-Book titles can be localized by language inside `js/config.js`.
-
-### Saved Scriptures
-
-Users can save verses into categories such as:
-
-- Notes
-- Encouragement
-- Obedience
-- Sin
-- Worship
-- Memorize
-
-Saved items can include descriptions and multiple verses.
-
-### Verse Comparison
-
-Users can compare the current passage with another translation.
-
-### Verse Sharing
-
-PRISM can generate a clean shareable image from selected verses using the Canvas API.
-
-### Installable PWA
-
-PRISM can be installed as a web app on supported browsers and devices.
-
----
-
-## Project Structure
-
-```txt
-prism/
-├── index.html
-├── manifest.webmanifest
-├── sw.js
-├── offline.html
-├── README.md
-├── css/
-│   └── styles.css
-├── js/
-│   ├── config.js
-│   ├── utils.js
-│   ├── storage.js
-│   ├── data.js
-│   ├── share.js
-│   └── app.js
-└── assets/
-    └── icons/
-        ├── icon-192.png
-        └── icon-512.png
+Cache Storage comfortably holds many full Bibles (unlike localStorage's ~5 MB limit),
+and everything is served offline once downloaded.

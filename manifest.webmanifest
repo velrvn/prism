@@ -1,0 +1,16 @@
+{
+  "name": "PRISM — Passages Rendered In Simple Minimalism",
+  "short_name": "PRISM",
+  "description": "The Holy Bible — offline, multilingual, minimal.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f2f1ee",
+  "theme_color": "#f2f1ee",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
