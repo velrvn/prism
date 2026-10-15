@@ -32,8 +32,8 @@
   let activeCompareVersion = null;
   let compareCache = {};
   let vpCache = {};
-  let versionStatus = {};                 // id → {cached, bytes, savedAt}
-  const downloadingVersions = new Set();  // ids currently being force-downloaded
+  let versionStatus = {};
+  const downloadingVersions = new Set();
   const sortAZ = false;
   const infiniteLoop = false;
 
@@ -111,7 +111,7 @@
   }
 
   /* ============================================================
-     Navigation stack (history integration)
+     Navigation stack
      ============================================================ */
   const navStack = [];
   let historyUsable = true;
@@ -173,37 +173,67 @@
   addEventListener('popstate', onPopState);
 
   /* ============================================================
-     PWA: install prompt + service worker
+     PWA Install — FIXED
      ============================================================ */
   let deferredPrompt = null;
-  addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
-  addEventListener('appinstalled', () => { deferredPrompt = null; showToast('PRISM ✓'); });
+
+  // Hide install button by default until browser confirms installability
+  if (installBtn) installBtn.style.display = 'none';
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) installBtn.style.display = 'flex';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    if (installBtn) installBtn.style.display = 'none';
+    showToast('PRISM installed successfully');
+  });
 
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isAndroid = /android/i.test(navigator.userAgent);
 
   function installInstructions() {
-    if (isIOS) return 'Install PRISM:<br><br>1. In <b>Safari</b>, tap <b>Share</b><br>2. Choose <b>"Add to Home Screen"</b><br>3. Tap <b>Add</b>';
-    if (isAndroid) return 'Install PRISM:<br><br>1. Tap browser menu <b>⋮</b><br>2. Choose <b>"Install app"</b><br>3. Confirm';
-    return 'Install PRISM:<br><br>1. Open browser menu <b>⋮</b><br>2. Choose <b>"Install PRISM"</b><br>3. Confirm';
+    if (isIOS) return 'To install PRISM:<br><br>1. Tap the <b>Share</b> button in Safari.<br>2. Scroll down and tap <b>"Add to Home Screen"</b>.<br>3. Tap <b>Add</b>.';
+    if (isAndroid) return 'To install PRISM:<br><br>1. Tap browser menu <b>⋮</b><br>2. Choose <b>"Install app"</b><br>3. Confirm';
+    return 'To install PRISM:<br><br>1. Open browser menu <b>⋮</b><br>2. Choose <b>"Install PRISM"</b><br>3. Confirm';
   }
 
-  installBtn.addEventListener('click', async () => {
-    closeAllMenus();
-    if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) { showToast(getUIText('toast_install_already')); return; }
-    if (deferredPrompt) {
+  if (installBtn) {
+    installBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      closeAllMenus();
+
+      if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+        showToast(getUIText('toast_install_already'));
+        return;
+      }
+
+      // iOS doesn't support beforeinstallprompt
+      if (isIOS || !deferredPrompt) {
+        instText.innerHTML = installInstructions();
+        if (!installModal.classList.contains('on')) navPush('install');
+        installModal.classList.add('on');
+        return;
+      }
+
+      // Trigger native install prompt instantly
       deferredPrompt.prompt();
-      const ch = await deferredPrompt.userChoice;
+      const choiceResult = await deferredPrompt.userChoice;
       deferredPrompt = null;
-      showToast(ch && ch.outcome === 'accepted' ? getUIText('toast_install_installing') : getUIText('toast_install_dismissed'));
-      return;
-    }
-    instText.innerHTML = installInstructions();
-    if (!installModal.classList.contains('on')) navPush('install');
-    installModal.classList.add('on');
-  });
-  instClose.addEventListener('click', () => uiBack());
-  installModal.addEventListener('click', e => { if (e.target === installModal) uiBack(); });
+
+      if (choiceResult.outcome === 'accepted') {
+        showToast(getUIText('toast_install_installing'));
+      } else {
+        showToast(getUIText('toast_install_dismissed'));
+      }
+    });
+  }
+
+  if (instClose) instClose.addEventListener('click', () => uiBack());
+  if (installModal) installModal.addEventListener('click', e => { if (e.target === installModal) uiBack(); });
 
   function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
@@ -258,7 +288,7 @@
   });
 
   /* ============================================================
-     Saved mode (horizontal "library" view)
+     Saved mode
      ============================================================ */
   function setSavedMode(on) {
     if (savedMode === on) return;
@@ -409,9 +439,9 @@
   function resetCardCache(b) { b.k1 = b.k2 = b.k3 = b.k4 = b.k5 = b.k6 = b.k7 = b.k8 = NaN; }
 
   /* ============================================================
-     Sharing (delegates to share.js)
+     Sharing
      ============================================================ */
-  function openShareOverlay() { /* handled inside SHARE */ }
+  function openShareOverlay() {}
   function closeShareOverlay() { SHARE.close(); }
 
   function triggerVerseShareForBlocks(blocksToShare) {
@@ -1030,7 +1060,6 @@
     setTimeout(() => openSaveModal(''), 240);
   });
 
-  /* long-press → share */
   rVerses.addEventListener('pointerdown', e => {
     const block = e.target.closest('.verse-block, .saved-item');
     if (!block) return;
@@ -1126,7 +1155,7 @@
   });
 
   /* ============================================================
-     Translations menu — with forced download & offline status
+     Translations menu
      ============================================================ */
   async function refreshVersionStatuses() {
     versionStatus = await DATA.statuses(VERSIONS.map(v => v.id));
@@ -1163,13 +1192,12 @@
         if (downloadingVersions.has(ver.id)) return;
 
         const status = versionStatus[ver.id];
-        if (status && status.cached) {           // instant switch — already on device
+        if (status && status.cached) {
           mmenu.classList.remove('on');
           await loadFull(ver.id);
           return;
         }
 
-        // Forced download: the translation MUST be saved locally before switching
         downloadingVersions.add(ver.id);
         setVersionRowState(ver.id, 'downloading', 'downloading…');
         showToast(`Downloading ${ver.label}…`);
@@ -1179,7 +1207,7 @@
           setVersionRowState(ver.id, 'done');
           downloadingVersions.delete(ver.id);
           mmenu.classList.remove('on');
-          await loadFull(ver.id);                 // now resolves instantly from cache
+          await loadFull(ver.id);
         } catch (err) {
           console.error(err);
           downloadingVersions.delete(ver.id);
@@ -1234,7 +1262,7 @@
     const ver = VERSIONS.find(v => v.id === verId);
     if (!ver) return;
     try {
-      const { data } = await DATA.load(verId);     // also persisted for offline use
+      const { data } = await DATA.load(verId);
       compareCache[verId] = data;
       cmpLabel.textContent = ver.label.split('(')[0].trim();
       cmpLoading.style.display = 'none';
@@ -1559,10 +1587,6 @@
     } else loadingOverlay.classList.remove('on');
   }
 
-  /**
-   * Loads a translation (cache-first via PRISM_DATA), persists the
-   * choice, and rebuilds the library.
-   */
   async function loadFull(versionId) {
     const ver = VERSIONS.find(v => v.id === versionId) || VERSIONS[0];
     showLoading(true, getUIText('loading_scripture'), getUIText('fetching_data'));
@@ -1575,7 +1599,7 @@
       });
 
       currentVersion = ver.id;
-      STORAGE.setPref('version', currentVersion);   // ← persists across restarts
+      STORAGE.setPref('version', currentVersion);
 
       normalizeBooks(data);
       BOOKS_DATA = data; BIBLE_BOOKS = data;
@@ -1807,7 +1831,7 @@
     const ver = VERSIONS.find(v => v.id === verId);
     if (!ver) return;
     try {
-      const { data } = await DATA.load(verId);    // also persisted for offline
+      const { data } = await DATA.load(verId);
       vpCache[verId] = data;
       vpCurrentVersion = verId;
       vpSelectLabel.textContent = ver.label;
@@ -1820,7 +1844,7 @@
   }
 
   /* ============================================================
-     UI language (i18n hook)
+     UI language
      ============================================================ */
   function applyUILanguage() {
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = getUIText(el.getAttribute('data-i18n')); });
@@ -2050,9 +2074,9 @@
     updateTopBarStates();
     updateTransBtnLabel();
     smNavBtn.innerHTML = ICON_CLOSE;
-    refreshVersionStatuses();          // warm the "downloaded ✓" badges
+    refreshVersionStatuses();
     requestAnimationFrame(frame);
-    loadFull(currentVersion);          // restores the saved translation choice
+    loadFull(currentVersion);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
