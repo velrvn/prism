@@ -1,115 +1,69 @@
-/* ============================================================
-   PRISM — Service Worker
-   Precaches the app shell for full offline use.
-   Never touches the Bible data cache (managed by js/data.js).
-   Icons and manifest are generated dynamically at runtime.
-   ============================================================ */
+const VERSION = 'v1.0.3';
+const CACHE_NAME = `prism-cache-${VERSION}`;
 
-const VERSION = 'v1.0.2'; // Bump this whenever you change any file
-const STATIC_CACHE = `prism-static-${VERSION}`;
-const RUNTIME_CACHE = `prism-runtime-${VERSION}`;
-const BIBLE_CACHE_PREFIX = 'prism-bible-';
-
-// No icons or manifest.webmanifest here — they are generated dynamically via Canvas/Blob in index.html
 const PRECACHE_URLS = [
   './',
   './index.html',
-  './offline.html',
-  './css/styles.css',
-  './js/config.js',
-  './js/utils.js',
-  './js/storage.js',
-  './js/data.js',
-  './js/share.js',
-  './js/app.js'
+  './manifest.webmanifest',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-/* ---------- Install ---------- */
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then(cache => cache.addAll(PRECACHE_URLS))
-      .catch(err => console.warn('Precache partial failure:', err))
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting())
   );
 });
 
-/* ---------- Activate ---------- */
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
+      .then((keys) => Promise.all(
         keys
-          .filter(k => !k.startsWith(BIBLE_CACHE_PREFIX) && k !== STATIC_CACHE && k !== RUNTIME_CACHE)
-          .map(k => caches.delete(k))
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
       ))
       .then(() => self.clients.claim())
   );
 });
 
-/* ---------- Manual update hook ---------- */
-self.addEventListener('message', event => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting();
-});
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
 
-/* ---------- Fetch strategies ---------- */
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
+  const url = new URL(event.request.url);
 
-  const url = new URL(req.url);
-
-  // Bible XML is cached by the data layer (Cache Storage) — skip SW handling
-  if (url.hostname === 'raw.githubusercontent.com' || url.hostname === 'cdn.jsdelivr.net') return;
-
-  // Same-origin navigation: network-first → cached page → offline page
-  if (url.origin === self.location.origin && req.mode === 'navigate') {
+  // Bible XML from GitHub — cache-first for offline reading
+  if (url.hostname === 'raw.githubusercontent.com' || url.hostname === 'cdn.jsdelivr.net') {
     event.respondWith(
-      fetch(req)
-        .then(res => {
-          const copy = res.clone();
-          caches.open(STATIC_CACHE).then(c => c.put('./index.html', copy)).catch(() => {});
-          return res;
-        })
-        .catch(async () => {
-          return (await caches.match(req))
-            || (await caches.match('./index.html'))
-            || (await caches.match('./offline.html'))
-            || Response.error();
-        })
-    );
-    return;
-  }
-
-  // Same-origin assets: cache-first with background refresh
-  if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(req).then(cached => {
-        const network = fetch(req)
-          .then(res => {
-            if (res && res.ok) {
-              const copy = res.clone();
-              caches.open(STATIC_CACHE).then(c => c.put(req, copy)).catch(() => {});
-            }
-            return res;
-          })
-          .catch(() => cached);
-        return cached || network;
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        });
       })
     );
     return;
   }
 
-  // Other cross-origin GETs: cache-first runtime cache
-  event.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req).then(res => {
-        if (res && (res.ok || res.type === 'opaque')) {
-          const copy = res.clone();
-          caches.open(RUNTIME_CACHE).then(c => c.put(req, copy)).catch(() => {});
-        }
-        return res;
-      }).catch(() => Response.error());
-    })
-  );
+  // Same-origin requests — network first, fall back to cache
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+    );
+    return;
+  }
 });
