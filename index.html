@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>PRISM — Passages Rendered In Simple Minimalism</title>
-
-<!-- PWA Meta Tags -->
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <meta name="theme-color" content="#f2f1ee">
@@ -13,22 +11,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="PRISM">
-
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-
-<!-- Splash Screen -->
 <div id="splashScreen"><div class="splash-logo"></div></div>
-<div id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="msg" data-i18n="loading_scripture">Loading Scripture...</div>
-  <div class="submsg" data-i18n="fetching_data">Fetching data from server. This may take a moment.</div>
-</div>
-
+<div id="loadingOverlay"><div class="spinner"></div><div class="msg" data-i18n="loading_scripture">Loading Scripture...</div><div class="submsg" data-i18n="fetching_data">Fetching data from server. This may take a moment.</div></div>
 <div id="side"></div>
 <div class="stage3d" id="worldStage"><div class="world" id="world"></div></div>
-
 <aside id="reader">
   <header class="r-head">
     <button class="back" id="rBack" title="Back to stack"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></button>
@@ -43,10 +32,7 @@
     <div class="r-testament" id="rTestament">Old Testament</div>
     <div class="r-book-title" id="rBookTitle">Genesis</div>
   </header>
-  <div class="r-body">
-    <nav class="r-chaps" id="rChaps"></nav>
-    <div class="r-read"><div class="vhead" id="rVhead"></div><div id="rVerses"></div></div>
-  </div>
+  <div class="r-body"><nav class="r-chaps" id="rChaps"></nav><div class="r-read"><div class="vhead" id="rVhead"></div><div id="rVerses"></div></div></div>
   <footer class="r-foot" id="rFoot">
     <div class="r-foot-actions" id="rFootActions">
       <button class="action-btn" id="rClearSel" title="Clear selection"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
@@ -62,18 +48,9 @@
     </div>
   </footer>
 </aside>
-
 <div class="stage3d" id="frontStage"></div>
 <div id="info"><div class="line"></div><div class="txt"><div class="t"></div><div class="d"></div><div class="m"></div></div></div>
-
-<div id="chapModal">
-  <div class="cm-back"></div>
-  <div class="cm-sheet">
-    <div class="cm-head"><span id="cmTitle" data-i18n="chapters">Chapters</span><button class="cm-close" id="cmClose">✕</button></div>
-    <div class="cm-list" id="cmList"></div>
-  </div>
-</div>
-
+<div id="chapModal"><div class="cm-back"></div><div class="cm-sheet"><div class="cm-head"><span id="cmTitle" data-i18n="chapters">Chapters</span><button class="cm-close" id="cmClose">✕</button></div><div class="cm-list" id="cmList"></div></div></div>
 <header id="top">
   <span class="logo" aria-hidden="true"></span>
   <input id="q" type="text" placeholder="Search books, chapters, verses…" autocomplete="off" spellcheck="false" data-i18n-ph="search_placeholder">
@@ -82,7 +59,6 @@
   <button id="settingsBtn" class="top-btn" type="button" title="Settings"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
   <span class="sub" id="sub">initializing…</span>
 </header>
-
 <div id="settingsMenu" class="dropdown-menu">
   <div style="padding: 10px 14px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em;">Filter</div>
   <div style="display: flex; gap: 6px; padding: 4px 12px 12px;">
@@ -94,24 +70,11 @@
   <button class="fopt" id="openTranslationsBtn"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--ink);stroke-width:2;fill:none;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span id="transBtnLabel">Translations</span></button>
   <button class="fopt" id="installBtn"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span data-i18n="download_pwa">Download as web app</span><span class="tail">PWA</span></button>
 </div>
-
-<div id="mmenu" class="version-modal dropdown-menu">
-  <div class="vm-head"><input id="vSearch" type="text" placeholder="Search languages or versions..." autocomplete="off" spellcheck="false" data-i18n-ph="search_versions"><button class="cm-close" id="vmClose">✕</button></div>
-  <div class="vm-list" id="vmList"></div>
-</div>
-
-<div id="cmpMenu" class="version-modal dropdown-menu">
-  <div class="vm-head"><input id="cmpSearch" type="text" placeholder="Search versions to compare..." autocomplete="off" spellcheck="false" data-i18n-ph="search_compare"><button class="cm-close" id="cmpClose">✕</button></div>
-  <div class="vm-list" id="cmpList"></div>
-</div>
-
+<div id="mmenu" class="version-modal dropdown-menu"><div class="vm-head"><input id="vSearch" type="text" placeholder="Search languages or versions..." autocomplete="off" spellcheck="false" data-i18n-ph="search_versions"><button class="cm-close" id="vmClose">✕</button></div><div class="vm-list" id="vmList"></div></div>
+<div id="cmpMenu" class="version-modal dropdown-menu"><div class="vm-head"><input id="cmpSearch" type="text" placeholder="Search versions to compare..." autocomplete="off" spellcheck="false" data-i18n-ph="search_compare"><button class="cm-close" id="cmpClose">✕</button></div><div class="vm-list" id="cmpList"></div></div>
 <div class="save-modal" id="saveModal">
   <div class="sm-container">
-    <div class="sm-head">
-      <button class="sm-nav-btn" id="smNavBtn" title="Close"></button>
-      <h2 id="smTitle" data-i18n="save_scripture">Save Scripture</h2>
-      <div class="sm-head-spacer"></div>
-    </div>
+    <div class="sm-head"><button class="sm-nav-btn" id="smNavBtn" title="Close"></button><h2 id="smTitle" data-i18n="save_scripture">Save Scripture</h2><div class="sm-head-spacer"></div></div>
     <div class="sm-view" id="smViewSave">
       <div class="sm-version-info"><svg class="vi-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><div><span data-i18n="saving_from">Saving from:</span> <strong id="smVersionLabel">KJV</strong></div></div>
       <div><div class="sm-label" data-i18n="category">Category</div><div class="sm-cats" id="smCats"></div></div>
@@ -127,36 +90,14 @@
     </div>
   </div>
 </div>
-
-<div class="confirm-modal" id="confirmModal">
-  <div class="cf-sheet">
-    <h3 id="cfTitle" data-i18n="confirm">Confirm</h3>
-    <p id="cfMessage">Are you sure?</p>
-    <div class="cf-actions" id="cfActions"><button class="cf-btn secondary" id="cfCancel" data-i18n="cancel">Cancel</button><button class="cf-btn danger" id="cfConfirm" data-i18n="delete">Delete</button></div>
-  </div>
-</div>
-
-<div class="confirm-modal" id="installModal">
-  <div class="cf-sheet">
-    <h3 data-i18n="install_PRISM">Install PRISM</h3>
-    <p id="instText"></p>
-    <div class="cf-actions"><button class="cf-btn secondary" id="instClose" data-i18n="close">Close</button></div>
-  </div>
-</div>
-
+<div class="confirm-modal" id="confirmModal"><div class="cf-sheet"><h3 id="cfTitle" data-i18n="confirm">Confirm</h3><p id="cfMessage">Are you sure?</p><div class="cf-actions" id="cfActions"><button class="cf-btn secondary" id="cfCancel" data-i18n="cancel">Cancel</button><button class="cf-btn danger" id="cfConfirm" data-i18n="delete">Delete</button></div></div></div>
+<div class="confirm-modal" id="installModal"><div class="cf-sheet"><h3 data-i18n="install_PRISM">Install PRISM</h3><p id="instText"></p><div class="cf-actions"><button class="cf-btn secondary" id="instClose" data-i18n="close">Close</button></div></div></div>
 <div class="toast" id="toast"></div>
 <div id="sres"></div>
 <nav id="dots"></nav>
 <div id="rail"><div class="thumb"></div></div>
 <div id="hint"><svg viewBox="0 0 10 10"><path d="M1 3l4 4 4-4"/></svg><span data-i18n="hint_text">Swipe ⇅ browse · ⇄ saved · ⏎ open · esc back</span></div>
-
-<div id="shareOverlay" class="share-overlay">
-  <div class="share-backdrop"></div>
-  <button class="share-close-btn">✕</button>
-  <div class="share-preview"><img id="shareImg" alt="Share Preview" /></div>
-  <div class="share-actions"><button class="share-btn" id="shareSaveBtn">Save Image</button><button class="share-btn primary" id="shareNativeBtn">Share</button></div>
-</div>
-
+<div id="shareOverlay" class="share-overlay"><div class="share-backdrop"></div><button class="share-close-btn">✕</button><div class="share-preview"><img id="shareImg" alt="Share Preview" /></div><div class="share-actions"><button class="share-btn" id="shareSaveBtn">Save Image</button><button class="share-btn primary" id="shareNativeBtn">Share</button></div></div>
 <script>
 addEventListener('error', function(e){
   try{
@@ -170,7 +111,6 @@ addEventListener('error', function(e){
   }catch(_){}
 });
 </script>
-
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
