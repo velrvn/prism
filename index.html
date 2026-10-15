@@ -1,28 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>PRISM — Passages Rendered In Simple Minimalism</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>PRISM — Passages Rendered In Simple Minimalism</title>
 
-<!-- PWA -->
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#f2f1ee">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="PRISM">
-<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+  <!-- PWA Meta Tags (No static icon links needed) -->
+  <meta name="theme-color" content="#f2f1ee">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PRISM">
+  
+  <!-- Your CSS -->
+  <link rel="stylesheet" href="css/styles.css">
 
-<link rel="stylesheet" href="css/styles.css">
-
-<!-- Critical splash styles so there is no flash before styles.css loads -->
-<style>
-  #splashScreen{position:fixed;inset:0;z-index:9999;background:#f2f1ee;display:flex;align-items:center;justify-content:center;flex-direction:column}
-  .splash-logo{width:80px;height:80px;border-radius:50%;background:conic-gradient(from 210deg,#7db4d8,#e0608f,#c9a15a,#8fb07a,#7db4d8);box-shadow:inset 0 2px 4px rgba(255,255,255,.7),0 10px 30px -10px rgba(0,0,0,.2);margin-bottom:24px;animation:splashPulse 2s ease-in-out infinite}
-  @keyframes splashPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-</style>
+  <!-- Critical splash styles so there is no flash before styles.css loads -->
+  <style>
+    #splashScreen{position:fixed;inset:0;z-index:9999;background:#f2f1ee;display:flex;align-items:center;justify-content:center;flex-direction:column}
+    .splash-logo{width:80px;height:80px;border-radius:50%;background:conic-gradient(from 210deg,#7db4d8,#e0608f,#c9a15a,#8fb07a,#7db4d8);box-shadow:inset 0 2px 4px rgba(255,255,255,.7),0 10px 30px -10px rgba(0,0,0,.2);margin-bottom:24px;animation:splashPulse 2s ease-in-out infinite}
+    @keyframes splashPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  </style>
 </head>
 <body>
 
