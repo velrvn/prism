@@ -4,7 +4,7 @@
 
 PRISM is an offline-first Bible reading Progressive Web App focused on clean typography, smooth navigation, and distraction-free scripture study. It allows users to download translations locally, read offline, compare versions, save verses, and share scripture cards.
 
-Live application: [https://velrvn.github.io/prism](https://velrvn.github.io/prism)
+[https://velrvn.github.io/prism](https://velrvn.github.io/prism)
 
 ---
 
