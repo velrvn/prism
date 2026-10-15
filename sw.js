@@ -1,31 +1,30 @@
 /* ============================================================
    PRISM — Service Worker
-   - Precaches the app shell for full offline use
-   - Never touches the Bible data cache (managed by js/data.js)
+   Precaches the app shell for full offline use.
+   Never touches the Bible data cache (managed by js/data.js).
+   Icons and manifest are generated dynamically at runtime.
    ============================================================ */
 
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.0.2'; // Bump this whenever you change any file
 const STATIC_CACHE = `prism-static-${VERSION}`;
 const RUNTIME_CACHE = `prism-runtime-${VERSION}`;
-const BIBLE_CACHE_PREFIX = 'prism-bible-'; // protected — never deleted on update
+const BIBLE_CACHE_PREFIX = 'prism-bible-';
 
+// No icons or manifest.webmanifest here — they are generated dynamically via Canvas/Blob in index.html
 const PRECACHE_URLS = [
   './',
   './index.html',
   './offline.html',
-  './manifest.webmanifest',
   './css/styles.css',
   './js/config.js',
   './js/utils.js',
   './js/storage.js',
   './js/data.js',
   './js/share.js',
-  './js/app.js',
-  './assets/icons/icon-192.png',
-  './assets/icons/icon-512.png'
+  './js/app.js'
 ];
 
-/* ---------- Install: precache app shell ---------- */
+/* ---------- Install ---------- */
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -34,7 +33,7 @@ self.addEventListener('install', event => {
   );
 });
 
-/* ---------- Activate: clean old caches, keep Bible data ---------- */
+/* ---------- Activate ---------- */
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
@@ -59,7 +58,7 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(req.url);
 
-  // Bible XML is cached by the data layer (Cache Storage) — let it pass through
+  // Bible XML is cached by the data layer (Cache Storage) — skip SW handling
   if (url.hostname === 'raw.githubusercontent.com' || url.hostname === 'cdn.jsdelivr.net') return;
 
   // Same-origin navigation: network-first → cached page → offline page
