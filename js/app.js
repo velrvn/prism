@@ -173,7 +173,7 @@
   addEventListener('popstate', onPopState);
 
   /* ============================================================
-     PWA Install — FIXED
+     PWA Install 
      ============================================================ */
   let deferredPrompt = null;
 
