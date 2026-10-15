@@ -1,21 +1,14 @@
-import { escapeHtml } from './utils.js';
-
 const SHARE_W = 1080, SHARE_H = 1920;
 
 function drawPRISMLogo(ctx, x, y, r) {
-    if (ctx.createConicGradient) {
-        const grad = ctx.createConicGradient(Math.PI * 1.16, x, y);
-        grad.addColorStop(0, '#7db4d8'); grad.addColorStop(0.25, '#e0608f'); grad.addColorStop(0.5, '#c9a15a'); grad.addColorStop(0.75, '#8fb07a'); grad.addColorStop(1, '#7db4d8');
-        ctx.fillStyle = grad;
-    } else { ctx.fillStyle = '#c9a15a'; }
+    if (ctx.createConicGradient) { const grad = ctx.createConicGradient(Math.PI * 1.16, x, y); grad.addColorStop(0, '#7db4d8'); grad.addColorStop(0.25, '#e0608f'); grad.addColorStop(0.5, '#c9a15a'); grad.addColorStop(0.75, '#8fb07a'); grad.addColorStop(1, '#7db4d8'); ctx.fillStyle = grad; } else { ctx.fillStyle = '#c9a15a'; }
     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 4; ctx.stroke();
 }
 
 function drawFooter(ctx) {
     ctx.fillStyle = '#1d1d1f'; ctx.font = '600 36px -apple-system, BlinkMacSystemFont, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('PRISM', SHARE_W / 2, 1720);
-    drawPRISMLogo(ctx, SHARE_W / 2, 1800, 28);
+    ctx.fillText('PRISM', SHARE_W / 2, 1720); drawPRISMLogo(ctx, SHARE_W / 2, 1800, 28);
 }
 
 export function generateVerseShareImage(bookName, chapterName, versesText) {
@@ -25,10 +18,8 @@ export function generateVerseShareImage(bookName, chapterName, versesText) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#1d1d1f';
     ctx.font = '700 52px -apple-system, BlinkMacSystemFont, sans-serif'; ctx.fillText(bookName, SHARE_W / 2, 240);
     ctx.font = '500 38px -apple-system, BlinkMacSystemFont, sans-serif'; ctx.fillStyle = 'rgba(29,29,31,0.6)'; ctx.fillText(chapterName, SHARE_W / 2, 310);
-    
     const availableHeight = 1680 - 360, marginX = 120, maxWidth = SHARE_W - (marginX * 2);
     let fontSize = 42, lineHeight = 76, gapBetweenVerses = 40, warning = false;
-
     const getWrappedLines = (text) => {
         let words = text.split(' '), lines = [], currentLine = '';
         for (let n = 0; n < words.length; n++) {
@@ -47,44 +38,14 @@ export function generateVerseShareImage(bookName, chapterName, versesText) {
                 }
             } else { currentLine = testLine; }
         }
-        if (currentLine) lines.push(currentLine);
-        return lines;
+        if (currentLine) lines.push(currentLine); return lines;
     };
-
-    const calcHeight = () => {
-        let h = 0;
-        versesText.forEach((verseStr, idx) => { h += getWrappedLines(verseStr).length * lineHeight; if (idx < versesText.length - 1) h += gapBetweenVerses; });
-        return h;
-    };
-
+    const calcHeight = () => { let h = 0; versesText.forEach((verseStr, idx) => { h += getWrappedLines(verseStr).length * lineHeight; if (idx < versesText.length - 1) h += gapBetweenVerses; }); return h; };
     while (fontSize > 24) { ctx.font = `400 ${fontSize}px ui-serif, Georgia, serif`; if (calcHeight() <= availableHeight) break; fontSize -= 2; lineHeight -= 4; gapBetweenVerses -= 2; }
     if (calcHeight() > availableHeight) warning = true;
-
     ctx.textAlign = 'center'; ctx.font = `400 ${fontSize}px ui-serif, Georgia, serif`; ctx.fillStyle = '#1d1d1f';
     let currentY = 360 + (availableHeight - calcHeight()) / 2;
-    versesText.forEach((verseStr, idx) => {
-        getWrappedLines(verseStr).forEach(line => { ctx.fillText(line, SHARE_W / 2, currentY); currentY += lineHeight; });
-        if (idx < versesText.length - 1) currentY += gapBetweenVerses;
-    });
+    versesText.forEach((verseStr, idx) => { getWrappedLines(verseStr).forEach(line => { ctx.fillText(line, SHARE_W / 2, currentY); currentY += lineHeight; }); if (idx < versesText.length - 1) currentY += gapBetweenVerses; });
     drawFooter(ctx);
     return { dataURL: canvas.toDataURL('image/png'), warning };
-}
-
-export function initShare(navPush, navInternalRemove, showToast) {
-    document.querySelector('#shareOverlay .share-backdrop').addEventListener('click', () => { document.getElementById('shareOverlay').classList.remove('on'); navInternalRemove('shareOverlay'); });
-    document.querySelector('#shareOverlay .share-close-btn').addEventListener('click', () => { document.getElementById('shareOverlay').classList.remove('on'); navInternalRemove('shareOverlay'); });
-    document.getElementById('shareSaveBtn').addEventListener('click', () => { const link = document.createElement('a'); link.download = 'PRISM-share.png'; link.href = document.getElementById('shareImg').src; link.click(); showToast('Image saved'); });
-    document.getElementById('shareNativeBtn').addEventListener('click', async () => {
-        try {
-            const res = await fetch(document.getElementById('shareImg').src);
-            const file = new File([await res.blob()], 'PRISM-share.png', { type: 'image/png' });
-            if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'PRISM', text: 'PRISM' });
-            else { document.getElementById('shareSaveBtn').click(); showToast('Native share not supported, image saved'); }
-        } catch (err) { showToast('Share cancelled or failed'); }
-    });
-}
-
-export function openShareOverlay(dataURL) {
-    document.getElementById('shareImg').src = dataURL;
-    document.getElementById('shareOverlay').classList.add('on');
 }
