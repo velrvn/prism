@@ -11,20 +11,10 @@ try {
     const migrated = [];
     rawFavs.forEach(f => {
         if (typeof f === 'number' && f >= 0 && f < 66) migrated.push(f);
-        else if (typeof f === 'string') {
-            const idx = BOOK_NAMES.findIndex(n => fold(n) === fold(f));
-            if (idx >= 0) migrated.push(idx);
-        }
+        else if (typeof f === 'string') { const idx = BOOK_NAMES.findIndex(n => fold(n) === fold(f)); if (idx >= 0) migrated.push(idx); }
     });
     favs = new Set(migrated);
 } catch(e) { favs = new Set(); }
 export const saveFavs = () => { try { localStorage.setItem('shelf-favs', JSON.stringify([...favs])); } catch(e) {} };
 
-try {
-    const oldKeys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('bible_cache_') && !k.startsWith(CACHE_PREFIX)) oldKeys.push(k);
-    }
-    oldKeys.forEach(k => localStorage.removeItem(k));
-} catch(e) {}
+try { const oldKeys = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('bible_cache_') && !k.startsWith(CACHE_PREFIX)) oldKeys.push(k); } oldKeys.forEach(k => localStorage.removeItem(k)); } catch(e) {}
