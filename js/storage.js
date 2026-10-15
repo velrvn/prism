@@ -1,62 +1,30 @@
-/* ============================================================
-   PRISM — storage.js
-   localStorage layer: user preferences (selected translation),
-   favorites, and saved scriptures. Everything is guarded
-   against quota/privacy-mode failures.
-   ============================================================ */
+import { BOOK_NAMES, CACHE_PREFIX } from './config.js';
+import { fold } from './utils.js';
 
-window.PRISM_STORAGE = (() => {
+export let savedScriptures = [];
+try { savedScriptures = JSON.parse(localStorage.getItem('PRISM_saved') || '[]'); } catch(e) { savedScriptures = []; }
+export const saveSavedScriptures = () => { try { localStorage.setItem('PRISM_saved', JSON.stringify(savedScriptures)); } catch(e) {} };
 
-  const PREFS_KEY = 'PRISM_prefs_v1';
-  const FAVS_KEY = 'shelf-favs';           // kept for migration compatibility
-  const SAVED_KEY = 'PRISM_saved';
-
-  /* ---------- preferences ---------- */
-  let prefs = { version: (window.PRISM && PRISM.DEFAULT_VERSION) || 'EnglishKJBible' };
-  try {
-    prefs = Object.assign(prefs, JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'));
-  } catch (e) { /* corrupted prefs — use defaults */ }
-
-  const persistPrefs = () => {
-    try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) {}
-  };
-  const getPref = k => prefs[k];
-  const setPref = (k, v) => { prefs[k] = v; persistPrefs(); };
-
-  /* ---------- favorites ---------- */
-  let favs = new Set();
-  try {
-    const raw = JSON.parse(localStorage.getItem(FAVS_KEY) || '[]');
-    const names = (window.PRISM && PRISM.BOOK_NAMES) || [];
-    raw.forEach(f => {
-      if (typeof f === 'number' && f >= 0 && f < 66) favs.add(f);
-      else if (typeof f === 'string') {
-        const idx = names.findIndex(n => n && n.toLowerCase() === f.toLowerCase());
-        if (idx >= 0) favs.add(idx);
-      }
+export let favs = new Set();
+try {
+    const rawFavs = JSON.parse(localStorage.getItem('shelf-favs') || '[]');
+    const migrated = [];
+    rawFavs.forEach(f => {
+        if (typeof f === 'number' && f >= 0 && f < 66) migrated.push(f);
+        else if (typeof f === 'string') {
+            const idx = BOOK_NAMES.findIndex(n => fold(n) === fold(f));
+            if (idx >= 0) migrated.push(idx);
+        }
     });
-  } catch (e) { favs = new Set(); }
+    favs = new Set(migrated);
+} catch(e) { favs = new Set(); }
+export const saveFavs = () => { try { localStorage.setItem('shelf-favs', JSON.stringify([...favs])); } catch(e) {} };
 
-  const saveFavs = () => {
-    try { localStorage.setItem(FAVS_KEY, JSON.stringify([...favs])); } catch (e) {}
-  };
-
-  /* ---------- saved scriptures ---------- */
-  let saved = [];
-  try { saved = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); } catch (e) { saved = []; }
-
-  const persistSaved = () => {
-    try { localStorage.setItem(SAVED_KEY, JSON.stringify(saved)); return true; }
-    catch (e) { return false; }
-  };
-
-  return {
-    getPref, setPref,
-    favs, saveFavs,
-    getSaved: () => saved,
-    persistSaved,
-    addSaved: item => { saved.push(item); return persistSaved(); },
-    removeSaved: id => { saved = saved.filter(s => s.id !== id); return persistSaved(); },
-    findSaved: id => saved.find(s => s.id === id)
-  };
-})();
+try {
+    const oldKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('bible_cache_') && !k.startsWith(CACHE_PREFIX)) oldKeys.push(k);
+    }
+    oldKeys.forEach(k => localStorage.removeItem(k));
+} catch(e) {}
